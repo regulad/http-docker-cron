@@ -1,0 +1,14 @@
+# Repository configuration, managed by the Settings app
+# (https://github.com/repository-settings/app). The shared defaults come from
+# regulad/.github; this file sets only what is this repository's own.
+_extends: .github
+
+repository:
+  name: http-docker-cron
+  description: >-
+    Hit a GET endpoint on an HTTP(s) server using curl on a schedule
+  homepage: ""
+  private: false
+  # Topics: comma-and-space separated string, NOT a YAML list.
+  topics: docker, docker-image, cron, curl, alpine, http
+  default_branch: master
