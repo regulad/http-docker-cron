@@ -1,8 +1,8 @@
 name: Dependabot auto-merge
 
 # Turns on GitHub's auto-merge for Dependabot's patch updates to the base image, security updates included, which skip
-# the cooldown. GitHub then merges each one once the Docker workflow's build passes (.github/settings.yml), and the
-# merge's push to master runs that workflow again, which publishes the image as :latest.
+# the cooldown. GitHub then merges each one once CI's image checks pass (.github/settings.yml), and the merge's push to
+# master runs workflows/docker-publish.yml, which publishes the image as :latest.
 #
 # Alpine doesn't follow Semantic Versioning: its 3.x is a release branch, cut from edge every six months, whose
 # packages can change widely (3.23 moved to apk-tools v3), and its .y a point release of that branch. A minor update
