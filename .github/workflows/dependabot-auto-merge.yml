@@ -1,0 +1,42 @@
+name: Dependabot auto-merge
+
+# Turns on GitHub's auto-merge for Dependabot's patch updates to the base image, security updates included, which skip
+# the cooldown. GitHub then merges each one once the Docker workflow's build passes (.github/settings.yml), and the
+# merge's push to master runs that workflow again, which publishes the image as :latest.
+#
+# Alpine doesn't follow Semantic Versioning: its 3.x is a release branch, cut from edge every six months, whose
+# packages can change widely (3.23 moved to apk-tools v3), and its .y a point release of that branch. A minor update
+# here moves the image to a new branch, so it waits for a person, along with major and GitHub Actions updates. The
+# Dockerfile names a branch, alpine:3.14, which already follows its point releases, so in practice every update to it
+# waits.
+#
+# Auto-merge is turned on with the DEPENDABOT_MERGE_TOKEN secret, not GITHUB_TOKEN. GitHub credits the merge to whoever
+# turned auto-merge on, and starts no workflows for a push credited to GITHUB_TOKEN, so the image would never be
+# published. The token is a fine-grained personal access token for this repository only, with read and write access to
+# Contents and Pull requests. It has no access to workflows, so it couldn't merge the GitHub Actions updates even by
+# mistake. It's a Dependabot secret because runs started by Dependabot can only read Dependabot secrets.
+on:
+  pull_request:
+    branches: ["master"]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  auto-merge:
+    # Only for Dependabot's own pushes. A person who pushes to its pull request takes the pull request over and merges
+    # it themselves; their push's run can't read Dependabot secrets in any case.
+    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - id: metadata
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+      - name: Merge once CI passes
+        if: >-
+          steps.metadata.outputs.update-type == 'version-update:semver-patch'
+          && steps.metadata.outputs.package-ecosystem != 'github_actions'
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.DEPENDABOT_MERGE_TOKEN }}
